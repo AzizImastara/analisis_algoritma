@@ -4,14 +4,15 @@
 
 #define V 10
 
-typedef struct
+struct Edge
 {
   int u, v, distance, cost;
-} Edge;
+};
 
-// inisiasi array dist, cost,dan predecessor
-void initializeArrays(int dist[], int cost[], int predecessor[], int src)
+// Fungsi untuk menemukan jalur terpendek menggunakan algoritma Bellman-Ford
+void bellmanFord(struct Edge edges[], int E, int src, int dest, int useDistance)
 {
+  int dist[V], cost[V], predecessor[V];
   for (int i = 0; i < V; ++i)
   {
     dist[i] = INT_MAX;
@@ -20,11 +21,8 @@ void initializeArrays(int dist[], int cost[], int predecessor[], int src)
   }
   dist[src] = 0;
   cost[src] = 0;
-}
 
-// relaksasi semua tepi V-1 kali
-void relaxEdges(Edge edges[], int E, int dist[], int cost[], int predecessor[], int useDistance)
-{
+  // Relaksasi semua tepi V-1 kali
   for (int i = 1; i <= V - 1; ++i)
   {
     for (int j = 0; j < E; ++j)
@@ -54,11 +52,8 @@ void relaxEdges(Edge edges[], int E, int dist[], int cost[], int predecessor[], 
       }
     }
   }
-}
 
-// memeriksa apakah terdapat siklus negatif
-int checkForNegativeCycle(Edge edges[], int E, int dist[], int cost[], int useDistance)
-{
+  // Memeriksa apakah terdapat siklus negatif
   for (int j = 0; j < E; ++j)
   {
     int u = edges[j].u - 1;
@@ -71,7 +66,7 @@ int checkForNegativeCycle(Edge edges[], int E, int dist[], int cost[], int useDi
       if (dist[u] != INT_MAX && dist[u] + d < dist[v])
       {
         printf("Graph contains negative weight cycle\n");
-        return 1;
+        return;
       }
     }
     else
@@ -79,25 +74,34 @@ int checkForNegativeCycle(Edge edges[], int E, int dist[], int cost[], int useDi
       if (cost[u] != INT_MAX && cost[u] + c < cost[v])
       {
         printf("Graph contains negative weight cycle\n");
-        return 1;
+        return;
       }
     }
   }
-  return 0;
-}
 
-void printResult(int dist[], int cost[], int predecessor[], int dest)
-{
+  printf("Total Distance: ");
   if (dist[dest] == INT_MAX)
   {
-    printf("Total Distance: No path found\n");
-    printf("Total Cost: No path found\n");
+    printf("No path found\n");
   }
   else
   {
-    printf("Total Distance: %d km\n", dist[dest]);
-    printf("Total Cost: %d\n", cost[dest]);
+    printf("%d km\n", dist[dest]);
+  }
 
+  printf("Total Cost: ");
+  if (cost[dest] == INT_MAX)
+  {
+    printf("No path found\n");
+  }
+  else
+  {
+    printf("%d\n", cost[dest]);
+  }
+
+  // Mencetak jalur
+  if (dist[dest] != INT_MAX)
+  {
     printf("Path: ");
     int path[V];
     int count = 0;
@@ -113,22 +117,10 @@ void printResult(int dist[], int cost[], int predecessor[], int dest)
   }
 }
 
-void bellmanFord(Edge edges[], int E, int src, int dest, int useDistance)
-{
-  int dist[V], cost[V], predecessor[V];
-  initializeArrays(dist, cost, predecessor, src);
-  relaxEdges(edges, E, dist, cost, predecessor, useDistance);
-
-  if (!checkForNegativeCycle(edges, E, dist, cost, useDistance))
-  {
-    printResult(dist, cost, predecessor, dest);
-  }
-}
-
 int main()
 {
   // (u, v, distance, cost)
-  Edge edges[] = {
+  struct Edge edges[] = {
       {1, 2, 2, 14},
       {1, 3, 4, 10},
       {1, 4, 3, 8},
@@ -151,9 +143,9 @@ int main()
       {9, 10, 4, 5}};
 
   int E = sizeof(edges) / sizeof(edges[0]);
+
   int start, destination;
   char priority[10];
-
   printf("Enter start city (1-10): ");
   scanf("%d", &start);
   printf("Enter end city (1-10): ");
@@ -161,10 +153,11 @@ int main()
   printf("Enter priority (distance/cost): ");
   scanf("%s", priority);
 
+  // Convert user input to 0-based index
   start -= 1;
   destination -= 1;
 
-  int useDistance = strcmp(priority, "distance") == 0;
+  int useDistance = strcmp(priority, "distance") == 0 ? 1 : 0;
 
   printf("Shortest path from city %d to city %d based on %s:\n", start + 1, destination + 1, priority);
   bellmanFord(edges, E, start, destination, useDistance);
